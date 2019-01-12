@@ -7,18 +7,24 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_restless import APIManager
+from flask_basicauth import BasicAuth
 
 from utils import success, error
 from model import db, Task, Word
 
 DB_FILE = './database.db'
+BASIC_AUTH = ("admin", "admin")
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///' + DB_FILE
+app.config['BASIC_AUTH_USERNAME'] = BASIC_AUTH[0]
+app.config['BASIC_AUTH_PASSWORD'] = BASIC_AUTH[1]
+app.config['BASIC_AUTH_FORCE'] = True
 
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///' + DB_FILE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SECRET_KEY"] = 'mysecretkey'
 
+BasicAuth().init_app(app)
 db.init_app(app)
 
 # List of all model class
@@ -35,23 +41,26 @@ with app.app_context():
     for model in models:
         api_manager.create_api(model, methods=["GET", "POST", "PATCH", "DELETE"])
 
-@app.route("/")
-def index():
-    return redirect("/admin")
+# Custom Behaviour
 
 @app.route("/hello", defaults={"name": None})
 @app.route("/hello/<name>")
 def hello(name):
-    if name:
+    if name: 
         return success(f"Hello {name} !" ), 200
     return error("You have to say your name : /hello/<name>"), 400
 
 @app.route("/search_tasks/<search>")
 def view_tasks(search):
     tasks = Task.query.filter(Task.task.like(f"%{search}%")).all()
-
     return success(data = tasks)
-    
+
+
+# Basic behaviour
+
+@app.route("/")
+def index():
+    return redirect("/admin")
 
 @app.errorhandler(500)
 def internal_server_error(err):

@@ -3,4 +3,5 @@ Flask-Admin==1.5.3
 Flask-Restless==0.17.0
 Flask-SQLAlchemy==2.3.2
 Flask-Testing==0.7.1
+Flask-BasicAuth==0.2.0
 gunicorn==19.9.0
